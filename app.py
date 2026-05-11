@@ -19,15 +19,16 @@ DAYS_FULL  = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sun
 MONTHS     = ["January","February","March","April","May","June",
               "July","August","September","October","November","December"]
 
+# Professional muted palette — no icons
 SHIFT_STYLE = {
-    "Morning":          {"fg":"#f5c842","bg":"#f5c84222","border":"#f5c84255","icon":"🌅"},
-    "Afternoon":        {"fg":"#4af0b8","bg":"#4af0b822","border":"#4af0b855","icon":"☀️"},
-    "Night":            {"fg":"#a78bfa","bg":"#a78bfa22","border":"#a78bfa55","icon":"🌙"},
-    "Sunday Work":      {"fg":"#f43f5e","bg":"#f43f5e22","border":"#f43f5e55","icon":"🔴"},
-    "Normal Holiday":   {"fg":"#f97316","bg":"#f9731622","border":"#f9731655","icon":"🏖️"},
-    "Récupération":     {"fg":"#60a5fa","bg":"#60a5fa22","border":"#60a5fa55","icon":"💤"},
-    "National Holiday": {"fg":"#34d399","bg":"#34d39922","border":"#34d39955","icon":"🌍"},
-    "Off":              {"fg":"#6b7280","bg":"#6b728022","border":"#6b728055","icon":"—"},
+    "Morning":          {"fg":"#b8860b","bg":"#b8860b18","border":"#b8860b40"},
+    "Afternoon":        {"fg":"#2e7d6e","bg":"#2e7d6e18","border":"#2e7d6e40"},
+    "Night":            {"fg":"#5c6bc0","bg":"#5c6bc018","border":"#5c6bc040"},
+    "Sunday Work":      {"fg":"#c0392b","bg":"#c0392b18","border":"#c0392b40"},
+    "Normal Holiday":   {"fg":"#7b5ea7","bg":"#7b5ea718","border":"#7b5ea740"},
+    "Récupération":     {"fg":"#2471a3","bg":"#2471a318","border":"#2471a340"},
+    "National Holiday": {"fg":"#1e8449","bg":"#1e844918","border":"#1e844940"},
+    "Off":              {"fg":"#707070","bg":"#70707012","border":"#70707030"},
 }
 
 # ── Persistence ───────────────────────────────────────────────────
@@ -158,109 +159,97 @@ def member_name(mid, members):
 
 def shift_pill(shift, text=None):
     s = SHIFT_STYLE.get(shift, SHIFT_STYLE["Off"])
-    label = text or f"{s['icon']} {shift}"
+    label = text or shift
     return (f'<span style="background:{s["bg"]};color:{s["fg"]};'
             f'border:1px solid {s["border"]};padding:2px 8px;'
-            f'border-radius:4px;font-size:.72rem;white-space:nowrap">{label}</span>')
+            f'border-radius:4px;font-size:.72rem;white-space:nowrap;font-weight:500">{label}</span>')
 
 # ── CSS ───────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@400;500&display=swap');
-html,body,[class*="css"]{ font-family:'DM Mono',monospace; }
-.stApp { background:#0e0f13; color:#e8eaf0; }
-section[data-testid="stSidebar"] { background:#16181f !important; }
-section[data-testid="stSidebar"] * { color:#e8eaf0 !important; }
+html,body,[class*="css"]{ font-family:'Inter','Segoe UI',sans-serif; }
+.stApp { background:#f7f8fa; color:#1a1d23; }
+/* Sidebar */
+section[data-testid="stSidebar"] { background:#ffffff !important; border-right:1px solid #e5e7eb; }
+section[data-testid="stSidebar"] * { color:#374151 !important; }
+section[data-testid="stSidebar"] .stRadio label { font-size:.85rem !important; }
+/* Section header */
 .section-header {
-    font-family:'Syne',sans-serif; font-weight:800; font-size:1.15rem;
-    color:#f5c842; border-bottom:1px solid #2a2d38;
-    padding-bottom:8px; margin-bottom:18px;
+    font-size:1.05rem; font-weight:600; color:#111827;
+    border-bottom:2px solid #e5e7eb; padding-bottom:10px; margin-bottom:20px;
+    letter-spacing:.01em;
 }
+/* Metrics */
 div[data-testid="metric-container"] {
-    background:#16181f; border:1px solid #2a2d38; border-radius:10px; padding:14px;
+    background:#ffffff; border:1px solid #e5e7eb;
+    border-radius:8px; padding:14px 18px;
 }
-div[data-testid="metric-container"] label { color:#7a7f94 !important; font-size:.7rem !important; }
-div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
-    font-size:1.8rem !important; color:#f5c842 !important;
-}
-.bal-ok  { color:#4af0b8; font-weight:600; }
-.bal-low { color:#f07a4a; font-weight:600; }
-
-/* Shift group card */
-.shift-card {
-    background:#16181f; border:1px solid #2a2d38; border-radius:10px;
-    padding:16px 20px; margin-bottom:14px;
-}
-.shift-card-title {
-    font-family:'Syne',sans-serif; font-weight:700;
-    font-size:1rem; margin-bottom:10px;
-}
-.member-chip {
-    display:inline-block; padding:4px 12px; border-radius:20px;
-    font-size:.75rem; margin:3px; font-weight:500;
-}
-
+div[data-testid="metric-container"] label { color:#6b7280 !important; font-size:.72rem !important; text-transform:uppercase; letter-spacing:.05em; }
+div[data-testid="metric-container"] div[data-testid="stMetricValue"] { font-size:1.6rem !important; color:#111827 !important; font-weight:600 !important; }
+/* Balance colors */
+.bal-ok  { color:#1e6f50; font-weight:600; }
+.bal-low { color:#b45309; font-weight:600; }
+/* Cards */
+.shift-card { background:#ffffff; border:1px solid #e5e7eb; border-radius:8px; padding:16px 20px; margin-bottom:12px; }
+.shift-card-title { font-size:.85rem; font-weight:600; margin-bottom:10px; color:#374151; text-transform:uppercase; letter-spacing:.06em; }
+.member-chip { display:inline-block; padding:3px 10px; border-radius:4px; font-size:.75rem; margin:2px; font-weight:500; }
 /* Calendar */
 .cal-wrap { overflow-x:auto; }
 .cal-table { width:100%; border-collapse:collapse; min-width:700px; }
-.cal-th {
-    text-align:center; padding:8px 4px; font-size:.68rem;
-    text-transform:uppercase; letter-spacing:1px; color:#7a7f94;
-    border-bottom:1px solid #2a2d38;
-}
-.cal-td {
-    vertical-align:top; border:1px solid #1e2029;
-    padding:6px; min-width:90px; min-height:80px;
-    background:#16181f; border-radius:4px;
-}
-.cal-td.today    { border:1px solid #f5c842 !important; }
-.cal-td.othermon { opacity:.3; }
-.cal-td.natday   { background:#34d39910; }
-.cal-day-num     { font-size:.82rem; font-weight:700; margin-bottom:4px; }
-.cal-tag {
-    display:block; padding:2px 6px; border-radius:3px; font-size:.65rem;
-    margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
-
+.cal-th { text-align:center; padding:8px 4px; font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:#6b7280; border-bottom:1px solid #e5e7eb; font-weight:500; }
+.cal-td { vertical-align:top; border:1px solid #f3f4f6; padding:6px; min-width:90px; min-height:76px; background:#ffffff; }
+.cal-td.today { border:2px solid #374151 !important; }
+.cal-td.othermon { opacity:.35; }
+.cal-td.natday { background:#f0fdf4; }
+.cal-day-num { font-size:.82rem; font-weight:600; margin-bottom:4px; color:#111827; }
+.cal-tag { display:block; padding:2px 5px; border-radius:3px; font-size:.63rem; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:500; }
 /* Weekly table */
 .wtable { width:100%; border-collapse:collapse; font-size:.82rem; }
-.wtable th {
-    padding:10px 12px; background:#16181f; font-size:.68rem;
-    text-transform:uppercase; letter-spacing:1px; color:#7a7f94;
-    border:1px solid #2a2d38; text-align:center;
-}
-.wtable td { padding:8px 12px; border:1px solid #2a2d38; text-align:center; }
-.wtable tr:hover td { background:#1e2029; }
+.wtable th { padding:10px 12px; background:#f9fafb; font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:#6b7280; border:1px solid #e5e7eb; text-align:center; font-weight:500; }
+.wtable td { padding:8px 12px; border:1px solid #e5e7eb; text-align:center; background:#ffffff; }
+.wtable tr:hover td { background:#f9fafb; }
+/* Table header row */
+.tbl-hdr { font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:#6b7280; padding:8px 0; border-bottom:1px solid #e5e7eb; font-weight:500; }
+/* Buttons */
+button[data-testid="baseButton-secondary"] { border:1px solid #d1d5db !important; border-radius:6px !important; font-size:.8rem !important; color:#374151 !important; background:#ffffff !important; }
+button[data-testid="baseButton-secondary"]:hover { background:#f9fafb !important; }
+button[data-testid="baseButton-primary"] { border-radius:6px !important; font-size:.8rem !important; background:#1e3a5f !important; border:none !important; }
+/* Inputs */
+input, select, textarea { border-radius:6px !important; font-size:.85rem !important; }
+/* Expander */
+details { border:1px solid #e5e7eb !important; border-radius:8px !important; background:#ffffff; }
+/* Info/success */
+div[data-testid="stAlert"] { border-radius:8px !important; font-size:.85rem !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── SIDEBAR ───────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 🗓️ ShiftPlan")
+    st.markdown("### ShiftPlan")
     st.caption("Team Holiday & Shift Manager")
     st.divider()
     page = st.radio("Navigate", [
-        "👥 Team Members",
-        "📅 Weekly Planning",
-        "🌙 Night Shift (Quarterly)",
-        "🗓️ Calendar",
-        "🏖️ Holidays",
-        "📊 Statistics",
+        "Team Members",
+        "Weekly Planning",
+        "Night Shift (Quarterly)",
+        "Calendar",
+        "Holidays",
+        "Statistics",
     ], label_visibility="collapsed")
     st.divider()
     d = get_data()
     st.metric("Members", len(d["members"]))
     nl = sum(round(calc_normal_holidays(m.get("start","")) - m.get("used_normal",0),1) for m in d["members"])
     rl = sum(round(calc_recup_earned(m["id"],d) + m.get("recup_manual",0) - m.get("used_recup",0),1) for m in d["members"])
-    st.metric("🟡 Normal Days Left", round(nl,1))
-    st.metric("🟣 Récup Days Left",  round(rl,1))
+    st.metric("Normal Days Left", round(nl,1))
+    st.metric("Recup Days Left",  round(rl,1))
     st.divider()
-    st.caption("LEGEND")
-    for name, s in SHIFT_STYLE.items():
+    st.caption("SHIFTS")
+    for sname, s in SHIFT_STYLE.items():
         st.markdown(
-            f'<span style="display:inline-block;width:10px;height:10px;background:{s["fg"]};'
-            f'border-radius:2px;margin-right:6px"></span>'
-            f'<span style="font-size:.72rem">{s["icon"]} {name}</span>',
+            f'<span style="display:inline-block;width:8px;height:8px;background:{s["fg"]};'
+            f'border-radius:2px;margin-right:8px"></span>'
+            f'<span style="font-size:.78rem;color:#374151">{sname}</span>',
             unsafe_allow_html=True)
 
 
@@ -269,7 +258,7 @@ with st.sidebar:
 # ═══════════════════════════════════════════════════════════════════
 ROLES = ["Médecin", "Infirmier", "Aide-soignant"]
 
-if page == "👥 Team Members":
+if page == "Team Members":
     d = get_data()
     st.markdown('<div class="section-header">Team Members</div>', unsafe_allow_html=True)
 
@@ -402,9 +391,9 @@ if page == "👥 Team Members":
 # ═══════════════════════════════════════════════════════════════════
 # PAGE: WEEKLY PLANNING
 # ═══════════════════════════════════════════════════════════════════
-elif page == "📅 Weekly Planning":
+elif page == "Weekly Planning":
     d = get_data()
-    st.markdown('<div class="section-header">📅 Weekly Planning</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Weekly Planning</div>', unsafe_allow_html=True)
 
     if not d["members"]:
         st.info("Add team members first."); st.stop()
@@ -448,9 +437,9 @@ elif page == "📅 Weekly Planning":
         night_names = [member_name(mid, members) for mid in night_ids]
         st.markdown(
             f'<div class="shift-card" style="border-color:#a78bfa55">'
-            f'<div class="shift-card-title" style="color:#a78bfa">🌙 Night Shift — Quarterly</div>'
+            f'<div class="shift-card-title" style="color:#5c6bc0">Night Shift — Quarterly</div>'
             + "".join(
-                f'<span class="member-chip" style="background:#a78bfa22;color:#a78bfa;border:1px solid #a78bfa44">{n}</span>'
+                f'<span class="member-chip" style="background:#5c6bc018;color:#5c6bc0;border:1px solid #5c6bc040">{n}</span>'
                 for n in night_names
             ) +
             f'<br><small style="color:#7a7f94">Assigned for the full quarter. Edit in Night Shift page.</small>'
@@ -459,7 +448,7 @@ elif page == "📅 Weekly Planning":
 
     # ── Morning assignment ────────────────────────────────────────
     st.markdown(
-        '<div class="shift-card-title" style="color:#f5c842;margin-top:12px">🌅 Morning Shift — This Week</div>',
+        '<div class="shift-card-title" style="color:#b8860b;margin-top:12px">Morning Shift — This Week</div>',
         unsafe_allow_html=True)
     cur_morning_names = [m["name"] for m in members if m["id"] in d["weekly_shifts"][wk].get("morning",[])]
     new_morning = st.multiselect(
@@ -472,7 +461,7 @@ elif page == "📅 Weekly Planning":
 
     # ── Afternoon assignment ──────────────────────────────────────
     st.markdown(
-        '<div class="shift-card-title" style="color:#4af0b8;margin-top:8px">☀️ Afternoon Shift — This Week</div>',
+        '<div class="shift-card-title" style="color:#2e7d6e;margin-top:8px">Afternoon Shift — This Week</div>',
         unsafe_allow_html=True)
     # Exclude already assigned to morning
     morning_ids_new = [day_opts[n] for n in new_morning]
@@ -488,7 +477,7 @@ elif page == "📅 Weekly Planning":
 
     # ── Sunday permanence ─────────────────────────────────────────
     st.markdown(
-        '<div class="shift-card-title" style="color:#f43f5e;margin-top:8px">🔴 Sunday Permanence</div>',
+        '<div class="shift-card-title" style="color:#c0392b;margin-top:8px">Sunday Permanence</div>',
         unsafe_allow_html=True)
     sun_date = wstart + timedelta(days=6)
     sun_dk   = sun_date.isoformat()
@@ -644,9 +633,9 @@ elif page == "📅 Weekly Planning":
 # ═══════════════════════════════════════════════════════════════════
 # PAGE: NIGHT SHIFT QUARTERLY
 # ═══════════════════════════════════════════════════════════════════
-elif page == "🌙 Night Shift (Quarterly)":
+elif page == "Night Shift (Quarterly)":
     d = get_data()
-    st.markdown('<div class="section-header">🌙 Night Shift — Quarterly Assignment</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Night Shift — Quarterly Assignment</div>', unsafe_allow_html=True)
 
     if not d["members"]: st.info("Add team members first."); st.stop()
 
@@ -681,11 +670,11 @@ elif page == "🌙 Night Shift (Quarterly)":
     st.divider()
     ca,cb = st.columns(2)
     with ca:
-        st.markdown('<div style="color:#a78bfa;font-weight:700;margin-bottom:8px">🌙 Group A</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:#5c6bc0;font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Group A</div>', unsafe_allow_html=True)
         cur_a = [m["name"] for m in members if m["id"] in nq.get("a",[])]
         new_a = st.multiselect("Group A members", list(member_opts.keys()), default=cur_a, key=f"nqa_{selected_qk}")
     with cb:
-        st.markdown('<div style="color:#818cf8;font-weight:700;margin-bottom:8px">🌙 Group B</div>', unsafe_allow_html=True)
+        st.markdown('<div style="color:#3a5a8c;font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Group B</div>', unsafe_allow_html=True)
         a_ids = [member_opts[n] for n in new_a]
         b_opts = {n:mid for n,mid in member_opts.items() if mid not in a_ids}
         cur_b = [m["name"] for m in members if m["id"] in nq.get("b",[])]
@@ -720,9 +709,9 @@ elif page == "🌙 Night Shift (Quarterly)":
 # ═══════════════════════════════════════════════════════════════════
 # PAGE: CALENDAR
 # ═══════════════════════════════════════════════════════════════════
-elif page == "🗓️ Calendar":
+elif page == "Calendar":
     d = get_data()
-    st.markdown('<div class="section-header">🗓️ Calendar View</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Calendar</div>', unsafe_allow_html=True)
 
     if "cal_month" not in st.session_state:
         st.session_state["cal_month"] = date.today().replace(day=1)
@@ -825,9 +814,9 @@ elif page == "🗓️ Calendar":
 # ═══════════════════════════════════════════════════════════════════
 # PAGE: HOLIDAYS
 # ═══════════════════════════════════════════════════════════════════
-elif page == "🏖️ Holidays":
+elif page == "Holidays":
     d = get_data()
-    st.markdown('<div class="section-header">🏖️ Holiday Management</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Holiday Management</div>', unsafe_allow_html=True)
 
     if not d["members"]: st.info("Add team members first."); st.stop()
 
@@ -899,9 +888,9 @@ elif page == "🏖️ Holidays":
 # ═══════════════════════════════════════════════════════════════════
 # PAGE: STATISTICS
 # ═══════════════════════════════════════════════════════════════════
-elif page == "📊 Statistics":
+elif page == "Statistics":
     d = get_data()
-    st.markdown('<div class="section-header">📊 Statistics</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Statistics</div>', unsafe_allow_html=True)
 
     if not d["members"]: st.info("No team members yet."); st.stop()
 
@@ -933,7 +922,7 @@ elif page == "📊 Statistics":
         ur = m.get("used_recup",0)
         try: weeks=(date.today()-date.fromisoformat(m.get("start",date.today().isoformat()))).days//7
         except: weeks=0
-        current_shift = "🌙 Night" if m["id"] in night_ids else "☀️ Day"
+        current_shift = "Night" if m["id"] in night_ids else "Day"
         rows.append({
             "Name":m["name"],"Role":m.get("role","—"),
             "Start":fmt_date(m.get("start","")),
