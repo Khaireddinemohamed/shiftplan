@@ -50,10 +50,27 @@ def load_data():
 def save_data(d):
     DATA_FILE.write_text(json.dumps(d, indent=2, default=str))
 
+def ensure_keys(d):
+    """Migrate old saved data — add any missing keys safely."""
+    d.setdefault("members", [])
+    d.setdefault("schedules", {})
+    d.setdefault("night_quarters", {})
+    d.setdefault("sunday_assignments", {})
+    d.setdefault("national_holidays", {})
+    d.setdefault("holiday_log", [])
+    d.setdefault("next_id", 1)
+    for m in d["members"]:
+        m.setdefault("used_normal", 0.0)
+        m.setdefault("used_recup",  0.0)
+        m.setdefault("recup_manual", 0.0)
+        m.setdefault("role", "")
+        m.setdefault("notes", "")
+    return d
+
 def get_data():
     if "data" not in st.session_state:
-        st.session_state["data"] = load_data()
-    return st.session_state["data"]
+        st.session_state["data"] = ensure_keys(load_data())
+    return ensure_keys(st.session_state["data"])
 
 def persist():
     save_data(get_data())
@@ -101,13 +118,33 @@ def week_key(d):
     return get_monday(d).isoformat()
 
 def quarter_key(d):
-    q = (d.month - 1) // 3 + 1
-    return f"{d.year}-Q{q}"
+    """Night shift quarters starting June:
+       Q1=Jun-Aug, Q2=Sep-Nov, Q3=Dec-Feb, Q4=Mar-May
+    """
+    month = d.month
+    if month in (6, 7, 8):
+        return f"{d.year}-Q1"
+    elif month in (9, 10, 11):
+        return f"{d.year}-Q2"
+    elif month == 12:
+        return f"{d.year}-Q3"
+    elif month in (1, 2):
+        return f"{d.year - 1}-Q3"
+    else:  # 3, 4, 5
+        return f"{d.year}-Q4"
 
 def quarter_label(qk):
     year, q = qk.split("-")
-    months = {1:"Jan–Mar", 2:"Apr–Jun", 3:"Jul–Sep", 4:"Oct–Dec"}
-    return f"Q{q[1]} {year} ({months[int(q[1])]})"
+    labels = {1:"Jun-Aug", 2:"Sep-Nov", 3:"Dec-Feb", 4:"Mar-May"}
+    return f"Q{q[1]} {year} ({labels[int(q[1])]})"
+
+def all_quarters():
+    today = date.today()
+    result = []
+    for year in [today.year - 1, today.year, today.year + 1]:
+        for q in range(1, 5):
+            result.append(f"{year}-Q{q}")
+    return result
 
 def fmt_date(s):
     if not s:
@@ -672,24 +709,29 @@ elif page == "🌙 Night Shift (Quarterly)":
     if "night_quarters" not in d: d["night_quarters"] = {}
 
     # Quarter selector
-    today = date.today()
-    quarters = []
-    for year in [today.year - 1, today.year, today.year + 1]:
-        for q in range(1, 5):
-            quarters.append(f"{year}-Q{q}")
-    current_qk   = quarter_key(today)
-    default_idx  = quarters.index(current_qk) if current_qk in quarters else 4
-    selected_qk  = st.selectbox("Select Quarter", quarters, index=default_idx)
+    quarters    = all_quarters()
+    current_qk  = quarter_key(date.today())
+    default_idx = quarters.index(current_qk) if current_qk in quarters else 4
+    selected_qk = st.selectbox("Select Quarter",
+                               [quarter_label(q) + f" [{q}]" for q in quarters],
+                               index=default_idx)
+    selected_qk = selected_qk.split("[")[1].rstrip("]")
 
     st.markdown(f"#### {quarter_label(selected_qk)}")
 
     # Which months are in this quarter
     q_num  = int(selected_qk.split("Q")[1])
     q_year = int(selected_qk.split("-")[0])
-    q_months = [(q_num-1)*3 + i + 1 for i in range(3)]
-    q_start  = date(q_year, q_months[0], 1)
-    q_end_m  = q_months[-1]
-    q_end    = date(q_year, q_end_m, calendar.monthrange(q_year, q_end_m)[1])
+    # Quarters start June: Q1=Jun-Aug, Q2=Sep-Nov, Q3=Dec-Feb, Q4=Mar-May
+    q_month_map = {1:(6,7,8), 2:(9,10,11), 3:(12,1,2), 4:(3,4,5)}
+    q_months = q_month_map[q_num]
+    # Q3 spans Dec(year) -> Feb(year+1)
+    if q_num == 3:
+        q_start = date(q_year, 12, 1)
+        q_end   = date(q_year + 1, 2, calendar.monthrange(q_year + 1, 2)[1])
+    else:
+        q_start = date(q_year, q_months[0], 1)
+        q_end   = date(q_year, q_months[2], calendar.monthrange(q_year, q_months[2])[1])
     st.caption(f"Period: {fmt_date(q_start.isoformat())} → {fmt_date(q_end.isoformat())}")
 
     member_options = {m["name"]: m["id"] for m in d["members"]}
