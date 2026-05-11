@@ -267,94 +267,136 @@ with st.sidebar:
 # ═══════════════════════════════════════════════════════════════════
 # PAGE: TEAM MEMBERS
 # ═══════════════════════════════════════════════════════════════════
+ROLES = ["Médecin", "Infirmier", "Aide-soignant"]
+
 if page == "👥 Team Members":
     d = get_data()
-    st.markdown('<div class="section-header">👥 Team Members</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Team Members</div>', unsafe_allow_html=True)
 
     edit_id = st.session_state.get("edit_member_id")
     edit_m  = next((m for m in d["members"] if m["id"] == edit_id), None) if edit_id else None
 
-    with st.expander("➕ Add / Edit Member", expanded=True):
-        c1,c2,c3 = st.columns(3)
-        with c1: name  = st.text_input("Full Name",  value=edit_m["name"]        if edit_m else "")
-        with c2: role  = st.text_input("Role",       value=edit_m.get("role","") if edit_m else "")
+    # ── Form ──────────────────────────────────────────────────────
+    form_title = "Edit Member" if edit_m else "New Member"
+    with st.expander(form_title, expanded=True):
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            name = st.text_input("Full Name", value=edit_m["name"] if edit_m else "", placeholder="e.g. Ahmed Bouali")
+        with c2:
+            role_idx = ROLES.index(edit_m["role"]) if edit_m and edit_m.get("role") in ROLES else 0
+            role = st.selectbox("Role", ROLES, index=role_idx)
         with c3:
-            sv = date.fromisoformat(edit_m["start"]) if edit_m and edit_m.get("start") else date.today()
+            sv    = date.fromisoformat(edit_m["start"]) if edit_m and edit_m.get("start") else date.today()
             start = st.date_input("Start Date", value=sv)
-
-        c4,c5 = st.columns(2)
         with c4:
             recup_manual = st.number_input(
-                "Manual Récupération Days",
-                min_value=0.0, max_value=365.0,
-                value=float(edit_m.get("recup_manual",0)) if edit_m else 0.0,
-                step=0.5,
-                help="Extra récup days added manually by manager"
-            )
-        with c5:
-            notes = st.text_input("Notes", value=edit_m.get("notes","") if edit_m else "")
+                "Manual Récup. Days", min_value=0.0, max_value=365.0,
+                value=float(edit_m.get("recup_manual", 0)) if edit_m else 0.0,
+                step=0.5)
 
-        ca,cb,_ = st.columns([1,1,4])
-        with ca: save_btn = st.button("💾 Save", type="primary", use_container_width=True)
+        ca, cb, _ = st.columns([1, 1, 5])
+        with ca:
+            save_btn = st.button("Save", type="primary", use_container_width=True)
         with cb:
-            if edit_m and st.button("✕ Cancel", use_container_width=True):
-                st.session_state.pop("edit_member_id",None); st.rerun()
+            if edit_m and st.button("Cancel", use_container_width=True):
+                st.session_state.pop("edit_member_id", None); st.rerun()
 
         if save_btn:
             if not name.strip():
-                st.error("Enter a name.")
+                st.error("Full name is required.")
             else:
+                payload = {"name": name.strip(), "role": role,
+                           "start": start.isoformat(), "recup_manual": recup_manual,
+                           "used_normal": edit_m.get("used_normal", 0.0) if edit_m else 0.0,
+                           "used_recup":  edit_m.get("used_recup",  0.0) if edit_m else 0.0,
+                           "notes": ""}
                 if edit_m:
-                    edit_m.update({"name":name.strip(),"role":role.strip(),
-                                   "start":start.isoformat(),"notes":notes.strip(),
-                                   "recup_manual":recup_manual})
-                    persist(); st.session_state.pop("edit_member_id",None)
-                    st.success(f"✅ {name} updated!"); st.rerun()
+                    edit_m.update(payload)
+                    st.session_state.pop("edit_member_id", None)
+                    st.success(f"{name} updated.")
                 else:
-                    d["members"].append({"id":d["next_id"],"name":name.strip(),
-                        "role":role.strip(),"start":start.isoformat(),
-                        "notes":notes.strip(),"used_normal":0.0,
-                        "used_recup":0.0,"recup_manual":recup_manual})
-                    d["next_id"] += 1; persist()
-                    st.success(f"✅ {name} added!"); st.rerun()
+                    payload["id"] = d["next_id"]
+                    d["members"].append(payload)
+                    d["next_id"] += 1
+                    st.success(f"{name} added.")
+                persist(); st.rerun()
 
-    st.divider()
+    # ── Table ─────────────────────────────────────────────────────
     if not d["members"]:
-        st.info("No team members yet.")
+        st.info("No team members yet. Add your first member above.")
     else:
-        cols = st.columns([2,1.5,1.5,2.2,2.2,1.2])
-        for c,t in zip(cols,["Name","Role","Since","🟡 Normal Holidays","🟣 Récupération","Actions"]):
-            c.markdown(f"**{t}**")
-        st.divider()
-        for m in d["members"]:
-            en = calc_normal_holidays(m.get("start",""))
-            un = m.get("used_normal",0.0)
-            bn = round(en-un,1)
-            er = round(calc_recup_earned(m["id"],d) + m.get("recup_manual",0.0), 1)
-            ur = m.get("used_recup",0.0)
-            br = round(er-ur,1)
-            c1,c2,c3,c4,c5,c6 = st.columns([2,1.5,1.5,2.2,2.2,1.2])
-            c1.markdown(f"**{m['name']}**")
-            c2.write(m.get("role") or "—")
-            c3.write(fmt_date(m.get("start","")))
-            c4.markdown(
-                f"Earned:**{en}d** Used:**{un}d**<br>"
-                f"<span class='{'bal-ok' if bn>=1 else 'bal-low'}'>▶ Left: {bn}d</span>",
+        # Filter bar
+        fc1, fc2, fc3 = st.columns([2, 2, 4])
+        with fc1:
+            filter_role = st.selectbox("Filter by role", ["All"] + ROLES, label_visibility="collapsed",
+                                       key="tm_filter_role")
+        with fc2:
+            filter_search = st.text_input("Search by name", placeholder="Search...",
+                                          label_visibility="collapsed", key="tm_search")
+
+        members_shown = [
+            m for m in d["members"]
+            if (filter_role == "All" or m.get("role") == filter_role)
+            and (filter_search.lower() in m["name"].lower())
+        ]
+
+        if not members_shown:
+            st.caption("No members match the current filter.")
+        else:
+            # Header row
+            st.markdown("""
+            <div style="display:grid;grid-template-columns:2fr 1.2fr 1.2fr 1.8fr 1.8fr 0.8fr;
+                        gap:0;padding:8px 12px;border-bottom:1px solid #2a2d38;
+                        font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#7a7f94;">
+                <div>Name</div><div>Role</div><div>Since</div>
+                <div>Normal Holidays</div><div>Récupération</div><div></div>
+            </div>""", unsafe_allow_html=True)
+
+            for m in members_shown:
+                en = calc_normal_holidays(m.get("start", ""))
+                un = m.get("used_normal", 0.0)
+                bn = round(en - un, 1)
+                er = round(calc_recup_earned(m["id"], d) + m.get("recup_manual", 0.0), 1)
+                ur = m.get("used_recup", 0.0)
+                br = round(er - ur, 1)
+
+                n_color = "#4af0b8" if bn >= 1 else "#f07a4a"
+                r_color = "#4af0b8" if br >= 1 else "#f07a4a"
+
+                c1, c2, c3, c4, c5, c6 = st.columns([2, 1.2, 1.2, 1.8, 1.8, 0.8])
+                c1.markdown(f"**{m['name']}**")
+                c2.write(m.get("role", "—"))
+                c3.write(fmt_date(m.get("start", "")))
+                c4.markdown(
+                    f"<span style='font-size:.8rem'>Earned <b>{en}d</b> &nbsp; Used <b>{un}d</b></span><br>"
+                    f"<span style='color:{n_color};font-size:.82rem;font-weight:600'>Left: {bn}d</span>",
+                    unsafe_allow_html=True)
+                c5.markdown(
+                    f"<span style='font-size:.8rem'>Earned <b>{er}d</b> &nbsp; Used <b>{ur}d</b></span><br>"
+                    f"<span style='color:{r_color};font-size:.82rem;font-weight:600'>Left: {br}d</span>",
+                    unsafe_allow_html=True)
+                with c6:
+                    ca2, cd2 = st.columns(2)
+                    with ca2:
+                        if st.button("Edit", key=f"e_{m['id']}", use_container_width=True):
+                            st.session_state["edit_member_id"] = m["id"]; st.rerun()
+                    with cd2:
+                        if st.button("Del", key=f"d_{m['id']}", use_container_width=True):
+                            d["members"] = [x for x in d["members"] if x["id"] != m["id"]]
+                            persist(); st.rerun()
+
+                st.markdown("<div style='border-bottom:0.5px solid #1e2029;margin:0 0 2px'></div>",
+                            unsafe_allow_html=True)
+
+        # Footer summary
+        if d["members"]:
+            total = len(d["members"])
+            by_role = {r: sum(1 for m in d["members"] if m.get("role")==r) for r in ROLES}
+            summary = " &nbsp;|&nbsp; ".join(f"<b>{v}</b> {k}" for k,v in by_role.items() if v>0)
+            st.markdown(
+                f"<div style='margin-top:12px;font-size:.78rem;color:#7a7f94'>"
+                f"Total: <b>{total}</b> &nbsp;|&nbsp; {summary}</div>",
                 unsafe_allow_html=True)
-            c5.markdown(
-                f"Earned:**{er}d** Used:**{ur}d**<br>"
-                f"<span class='{'bal-ok' if br>=1 else 'bal-low'}'>▶ Left: {br}d</span>",
-                unsafe_allow_html=True)
-            with c6:
-                ce,cd = st.columns(2)
-                with ce:
-                    if st.button("✏️",key=f"e_{m['id']}"):
-                        st.session_state["edit_member_id"]=m["id"]; st.rerun()
-                with cd:
-                    if st.button("🗑️",key=f"d_{m['id']}"):
-                        d["members"]=[x for x in d["members"] if x["id"]!=m["id"]]
-                        persist(); st.rerun()
-            st.divider()
 
 
 # ═══════════════════════════════════════════════════════════════════
